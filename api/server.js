@@ -83,6 +83,18 @@ async function handle(request, response) {
   const url = new URL(request.url, `http://${request.headers.host}`);
   const parts = url.pathname.split('/').filter(Boolean);
 
+  if (request.method === 'GET' && url.pathname === '/') {
+    return sendJson(response, 200, {
+      service: 'edutask-api',
+      status: 'ok',
+      endpoints: {
+        health: 'GET /api/health',
+        tasks: 'GET /api/tasks',
+        createDraft: 'POST /api/tasks/draft'
+      }
+    });
+  }
+
   if (request.method === 'GET' && url.pathname === '/api/health') {
     return sendJson(response, 200, { status: 'ok', service: 'edutask-api' });
   }
