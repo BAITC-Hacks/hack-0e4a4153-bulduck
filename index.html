@@ -18,6 +18,49 @@
       .main-card .field-label select { width: 100%; font-size: 15px; }
       #draftInput { min-height: 220px; }
       .textarea-footer { font-size: 11px; margin-top: -8px; }
+      :root {
+        --ink: #28233d;
+        --muted: #77718c;
+        --line: #e5e0f0;
+        --cream: #f8f7fc;
+        --green: #7054d9;
+        --orange: #f09a62;
+      }
+      body { transition: background .25s ease, color .25s ease; }
+      .hero { background: linear-gradient(135deg, #eeeaff 0%, #f8f5ff 100%); }
+      .brand-mark, .button.primary, .timeline-item.current > span { background: #7054d9; }
+      .button.primary:hover { background: #5d43c7; transform: translateY(-1px); }
+      .button, .text-button, .filter-button, .nav-link, .task-card { transition: transform .2s ease, box-shadow .2s ease, color .2s ease; }
+      .task-card:hover { transform: translateY(-4px); box-shadow: 0 14px 28px rgba(65, 45, 130, .12); }
+      .hero { position: relative; overflow: hidden; }
+      .hero::after { content: ''; position: absolute; width: 360px; height: 360px; right: 7%; top: -180px; border-radius: 50%; background: rgba(112, 84, 217, .10); pointer-events: none; }
+      .hero > * { position: relative; z-index: 1; }
+      .main-card, .side-card { box-shadow: 0 10px 30px rgba(49, 35, 100, .06); }
+      .progress-track { height: 6px; background: #e7e2f4; }
+      .progress-track span { background: linear-gradient(90deg, #7054d9, #9a83ee); }
+      textarea, input, select { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
+      textarea:hover, input:hover, select:hover { border-color: #b8a9e8; }
+      textarea:focus, input:focus, select:focus { transform: translateY(-1px); }
+      .button:focus-visible, .theme-toggle:focus-visible, .text-button:focus-visible, .nav-link:focus-visible { outline: 3px solid #c9bdf2; outline-offset: 3px; }
+      .hero, .progress-wrap, .main-card, .side-card, .catalog-header, .catalog-toolbar, .task-card { animation: rise-in .45s ease both; }
+      .side-card { animation-delay: .08s; }
+      .task-card:nth-child(2) { animation-delay: .08s; }
+      .task-card:nth-child(3) { animation-delay: .16s; }
+      @keyframes rise-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+      .example-prompt, .quote-card, .question-intro, .generated-banner { background: #f2efff; border-color: #e3dcfb; }
+      .example-prompt { color: #8175a7; }
+      .quote-card { box-shadow: inset 4px 0 0 #a18be8; }
+      .quote-card > span { color: #b5a4ed; }
+      .quote-card small { color: #8b7ab8; }
+      .question-icon, .success-icon { background: #7054d9; }
+      body.dark-theme .example-prompt, body.dark-theme .quote-card, body.dark-theme .question-intro, body.dark-theme .generated-banner { background: #302752; border-color: #4a3e70; }
+      .theme-toggle { border: 1px solid var(--line); background: var(--cream); color: var(--ink); border-radius: 999px; padding: 8px 11px; cursor: pointer; font: inherit; font-size: 13px; }
+      body.dark-theme { --ink: #f5f2ff; --muted: #aaa3c2; --line: #3c3555; --cream: #171426; --white: #211b35; }
+      body.dark-theme .topbar, body.dark-theme .main-card, body.dark-theme .side-card, body.dark-theme .task-card, body.dark-theme .search-box, body.dark-theme .catalog-toolbar select, body.dark-theme input, body.dark-theme textarea, body.dark-theme select { background: #211b35; color: var(--ink); }
+      body.dark-theme .hero { background: linear-gradient(135deg, #292143 0%, #211b35 100%); }
+      body.dark-theme .hero-copy, body.dark-theme .catalog-header p:not(.section-kicker), body.dark-theme .task-card p, body.dark-theme .field-hint { color: #aaa3c2; }
+      body.dark-theme .example-prompt, body.dark-theme .quote-card, body.dark-theme .question-intro, body.dark-theme .generated-banner { background: #2b2443; }
+      body.dark-theme .theme-toggle { background: #2b2443; color: #f5f2ff; }
       @media (max-width: 800px) {
         .card-heading h2 { font-size: 27px; }
         .field-hint { font-size: 13px; }
@@ -33,7 +76,7 @@
           <button class="nav-link active" data-view="create">Создать задачу</button>
           <button class="nav-link" data-view="catalog">Каталог задач <span class="nav-count">12</span></button>
         </nav>
-        <div class="profile-chip"><span class="profile-avatar">ДБ</span><span class="profile-name">Дамир Боталбаев</span><span class="chevron">⌄</span></div>
+        <div class="profile-chip"><span class="profile-avatar">ДБ</span><span class="profile-name">Дамир Боталбаев</span><button id="themeToggle" class="theme-toggle" type="button" aria-label="Переключить тему">☾</button><span class="chevron">⌄</span></div>
       </header>
 
       <main>
