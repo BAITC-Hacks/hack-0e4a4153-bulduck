@@ -1,11 +1,11 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://edutask.local/schemas/task.json",
-  "title": "EduTask",
-  "description": "Структура педагогической задачи, которую преподаватель публикует для студенческих команд.",
+  "title": "EduTask API task response",
+  "description": "Server response; partial drafts may contain empty fields. AI generation uses separate text-only schemas.",
   "type": "object",
   "additionalProperties": false,
   "required": [
+    "id",
     "title",
     "context",
     "users",
@@ -16,89 +16,191 @@
     "expectedResult",
     "successCriteria",
     "deadline",
+    "contact",
+    "interactionFormat",
+    "confirmed",
     "score",
     "level",
-    "status"
+    "status",
+    "breakdown",
+    "missingInformation",
+    "proposals",
+    "result",
+    "criteria"
   ],
   "properties": {
     "id": {
-      "type": "string",
-      "description": "Уникальный идентификатор задачи."
+      "type": "string"
     },
     "title": {
-      "type": "string",
-      "minLength": 5,
-      "description": "Короткое название задачи."
+      "type": "string"
     },
     "context": {
-      "type": "string",
-      "minLength": 20,
-      "description": "Контекст, проблема и потребность преподавателя."
+      "type": "string"
+    },
+    "subject": {
+      "type": "string"
+    },
+    "format": {
+      "type": "string"
+    },
+    "materials": {
+      "type": "string"
+    },
+    "expectedResult": {
+      "type": "string"
+    },
+    "deadline": {
+      "type": "string"
+    },
+    "contact": {
+      "type": "string"
+    },
+    "interactionFormat": {
+      "type": "string"
+    },
+    "rawDescription": {
+      "type": "string"
+    },
+    "result": {
+      "type": "string"
+    },
+    "criteria": {
+      "type": "string"
+    },
+    "publishedAt": {
+      "type": "string"
     },
     "users": {
       "type": "array",
-      "minItems": 1,
-      "items": { "type": "string" },
-      "description": "Пользователи и целевая аудитория решения."
-    },
-    "subject": {
-      "type": "string",
-      "minLength": 2,
-      "description": "Предмет или образовательное направление."
-    },
-    "format": {
-      "type": "string",
-      "minLength": 2,
-      "description": "Желаемый формат решения."
-    },
-    "materials": {
-      "type": "string",
-      "description": "Материалы и данные, уже доступные заказчику."
+      "items": {
+        "type": "string"
+      }
     },
     "constraints": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Сроки, технические, языковые и другие ограничения."
-    },
-    "expectedResult": {
-      "type": "string",
-      "minLength": 20,
-      "description": "Конкретный ожидаемый результат работы команды."
+      "items": {
+        "type": "string"
+      }
     },
     "successCriteria": {
       "type": "array",
-      "minItems": 1,
-      "items": { "type": "string" },
-      "description": "Измеримые признаки успешного решения."
+      "items": {
+        "type": "string"
+      }
     },
-    "deadline": {
-      "type": "string",
-      "description": "Желаемый срок выполнения."
+    "questions": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
-    "contact": {
-      "type": "string",
-      "description": "Контакт и формат обратной связи."
+    "missingInformation": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
     },
     "score": {
       "type": "integer",
       "minimum": 0,
-      "maximum": 100,
-      "description": "Рейтинг готовности задачи."
+      "maximum": 100
     },
     "level": {
-      "type": "string",
-      "enum": ["draft", "working", "ready", "priority"],
-      "description": "Уровень готовности по рейтингу."
+      "enum": [
+        "draft",
+        "working",
+        "ready",
+        "priority"
+      ]
     },
     "status": {
-      "type": "string",
-      "enum": ["draft", "published", "in_review", "selected", "completed"],
-      "description": "Текущий статус задачи."
+      "enum": [
+        "draft",
+        "published",
+        "in_review",
+        "selected",
+        "completed"
+      ]
     },
-    "missingInformation": {
+    "confirmed": {
+      "type": "boolean"
+    },
+    "demo": {
+      "type": "boolean"
+    },
+    "created": {
+      "type": "number"
+    },
+    "proposals": {
       "type": "array",
-      "items": { "type": "string" },
-      "description": "Данные, которых не хватает для повышения рейтинга."
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "id",
+          "teamName",
+          "idea",
+          "plan",
+          "deadline",
+          "link",
+          "status",
+          "createdAt"
+        ],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "teamName": {
+            "type": "string"
+          },
+          "idea": {
+            "type": "string"
+          },
+          "plan": {
+            "type": "string"
+          },
+          "deadline": {
+            "type": "string"
+          },
+          "link": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "status": {
+            "enum": [
+              "pending",
+              "accepted",
+              "rejected"
+            ]
+          }
+        }
+      }
+    },
+    "breakdown": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "points",
+          "maxPoints",
+          "passed"
+        ],
+        "properties": {
+          "points": {
+            "type": "integer"
+          },
+          "maxPoints": {
+            "type": "integer"
+          },
+          "passed": {
+            "type": "boolean"
+          }
+        }
+      }
     }
   }
 }

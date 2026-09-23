@@ -5,6 +5,8 @@
   "description": "EduTask MVP backend",
   "scripts": {
     "start": "node server.js",
-    "dev": "node --watch server.js"
+    "dev": "node --watch server.js",
+    "test": "node --test tests/*.test.js",
+    "test:browser": "node tests/browser-smoke.cjs"
   }
 }

@@ -5,22 +5,14 @@ const nextButton = $('#nextButton');
 const backButton = $('#backButton');
 const toast = $('#toast');
 const example = 'Мне нужен интерактивный урок истории Казахстана для 8 класса, чтобы ученики лучше поняли тему «Алаш Орда» и не просто заучивали даты.';
-const storeKey = 'edutask.tasks.v1';
 const catalog = $('.catalog-grid');
-const demoTasks = [...catalog.querySelectorAll('.task-card')].map((card, index) => ({
-  id: `demo-${index + 1}`, title: card.querySelector('h3').textContent,
-  context: card.querySelector('p').textContent, result: '',
-  criteria: '', subject: [...card.querySelectorAll('.task-tags span')].map(x => x.textContent).join(', '),
-  format: '', deadline: 'Гибкий срок', demo: true, created: index,
-}));
-function loadTasks() {
-  try {
-    const items = JSON.parse(localStorage.getItem(storeKey) || '[]');
-    return Array.isArray(items) ? items.filter(x => x && typeof x.id === 'string' && typeof x.title === 'string') : [];
-  } catch { return []; }
+let published = [];
+const allTasks = () => published;
+async function refreshCatalog() {
+  const response = await request('/api/tasks');
+  published = response.tasks;
+  renderCatalog();
 }
-let published = loadTasks();
-const allTasks = () => [...published, ...demoTasks];
 function showToast(message) {
   toast.textContent = message;
   toast.classList.add('show');
@@ -31,7 +23,7 @@ function setView(view) {
   $('#createView').classList.toggle('hidden', view !== 'create');
   $('#catalogView').classList.toggle('hidden', view !== 'catalog');
   document.querySelectorAll('[data-view]').forEach(button => button.classList.toggle('active', button.dataset.view === view));
-  if (view === 'catalog') renderCatalog();
+  if (view === 'catalog') refreshCatalog().catch(error => showToast(error.message));
   window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 function updateStep() {
@@ -44,19 +36,16 @@ function updateStep() {
   $('#stepTitle').textContent = ['','Опишите педагогическую задачу','Уточним детали','Проверьте карточку задачи'][state.step];
   document.querySelectorAll('.timeline-item').forEach((item, index) => item.classList.toggle('current', index + 1 === state.step));
 }
-async function post(route, data) {
-  const response = await fetch(route, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(data) });
-  if (!response.ok) throw new Error('Сервер недоступен');
-  return response.json();
+async function request(route, method = 'GET', data) {
+  const response = await fetch(route, {
+    method, headers: { 'Content-Type': 'application/json' },
+    ...(data === undefined ? {} : { body: JSON.stringify(data) })
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(result.error || 'Сервер недоступен');
+  return result;
 }
-function fallbackQuestions(draft) {
-  const questions = [];
-  if (!/(цель|науч|осво|понял|смог|умел)/i.test(draft)) questions.push('Чему именно должны научиться участники?');
-  if (!/(класс|курс|студент|ученик|преподавател)/i.test(draft)) questions.push('Для какого возраста или уровня подготовки это нужно?');
-  if (!/(провер|оцен|тест|результат|критери)/i.test(draft)) questions.push('Как вы поймёте, что решение помогло?');
-  if (!/(минут|недел|месяц|интернет|ограничен|бюджет)/i.test(draft)) questions.push('Есть ли ограничения по времени или доступу?');
-  return questions.slice(0, 3).length ? questions.slice(0, 3) : ['Какой результат будет самым полезным для вашей аудитории?'];
-}
+const post = (route, data) => request(route, 'POST', data);
 const questionPanel = document.createElement('div');
 questionPanel.className = 'ai-panel';
 questionPanel.innerHTML = '<strong>Вопросы по вашему описанию</strong><p class="panel-status" role="status"></p><div class="question-fields"></div>';
@@ -80,17 +69,13 @@ function renderQuestions(questions) {
 }
 async function getQuestions() {
   const draft = draftInput.value.trim();
-  if (state.questionDraft === draft && state.questions.length) return;
-  state.questionDraft = draft;
+  if (state.questionDraft === draft && state.taskId) return;
   questionPanel.querySelector('.panel-status').textContent = 'Подбираем уточнения…';
-  try {
-    const response = await post('/api/questions', { draft });
-    renderQuestions(Array.isArray(response.questions) && response.questions.length ? response.questions : fallbackQuestions(draft));
-    questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-подсказки по вашему описанию' : 'Ответьте на важные для задачи вопросы';
-  } catch {
-    renderQuestions(fallbackQuestions(draft));
-    questionPanel.querySelector('.panel-status').textContent = 'Подсказки по вашему описанию';
-  }
+  const response = await post('/api/tasks/draft', { rawDescription: draft });
+  state.taskId = response.id;
+  state.questionDraft = draft;
+  renderQuestions(response.questions);
+  questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-подсказки: AI недоступен или отключён' : 'Ответьте на вопросы по задаче';
 }
 function formData() {
   return {
@@ -98,14 +83,6 @@ function formData() {
     format: $('#format').value, deadline: $('#deadline').value,
     materials: $('#materials').value.trim(), constraint: $('#constraint').value.trim(),
     answers: state.questions.filter(x => x.answer),
-  };
-}
-function fallbackCard(input) {
-  return {
-    title: `${input.format} по предмету «${input.subject}»`,
-    context: `${input.draft}\nАудитория: ${input.audience}. Материалы: ${input.materials || 'не указаны'}.\n${input.answers.map(x => `${x.question} ${x.answer}`).join('\n')}`.trim(),
-    result: `Готовый ${input.format.toLowerCase()} для ${input.audience.toLowerCase()}. Срок: ${input.deadline}.`,
-    criteria: `Решение соответствует учебной цели.\nУчтено ограничение: ${input.constraint || 'не указано'}.`,
   };
 }
 function cardData() {
@@ -117,15 +94,16 @@ function setCard(data) {
   }
 }
 async function generateCard() {
+  $('#confirmCard').checked = false;
   const input = formData();
-  try {
-    const data = await post('/api/generate', input);
-    setCard(data);
-    showToast(data.demo ? 'Карточка создана в демо-режиме' : 'Карточка создана с помощью AI');
-  } catch {
-    setCard(fallbackCard(input));
-    showToast('Карточка создана локально');
-  }
+  const data = await post('/api/tasks/' + state.taskId + '/generate-card', {
+    answers: { users: [input.audience], subject: input.subject, format: input.format,
+      materials: input.materials, constraints: input.constraint.split('\n').filter(Boolean), deadline: input.deadline },
+    clarifications: input.answers
+  });
+  setCard(data);
+  showToast(data.demo ? 'Карточка создана в демо-режиме' : 'Карточка создана с помощью AI');
+  await updateRating();
 }
 const reviewPanel = document.createElement('div');
 reviewPanel.className = 'ai-panel review-panel';
@@ -172,30 +150,25 @@ for (const selector of ['#taskTitle', '#taskContext', '#taskResult', '#taskCrite
     reviewPanel.querySelector('.review-result').textContent = 'Карточка изменена. Проверьте её ещё раз перед публикацией.';
   });
 }
-function publish() {
-  const card = cardData();
-  if (!card.title || !card.context || !card.result || !card.criteria) {
-    showToast('Заполните все поля карточки');
-    return;
-  }
-  if (state.reviewSignature !== JSON.stringify(card)) {
-    reviewCard();
-    showToast('Сначала проверьте обновлённую карточку');
-    return;
-  }
-  const details = formData();
-  const task = { ...card, id: globalThis.crypto?.randomUUID?.() || `task-${Date.now()}`, subject: details.subject, format: details.format, deadline: details.deadline, created: Date.now() };
-  published.unshift(task);
-  try { localStorage.setItem(storeKey, JSON.stringify(published)); }
-  catch { showToast('Не удалось сохранить задачу в браузере'); published.shift(); return; }
-  state.step = 1;
-  state.questionDraft = '';
-  state.reviewSignature = '';
-  draftInput.value = '';
-  $('#charCount').textContent = '0';
-  updateStep();
-  showToast('Задача опубликована в каталоге');
-  setView('catalog');
+async function publish() {
+  if (!$('#confirmCard').checked) { showToast('Подтвердите карточку перед публикацией'); return; }
+  if (!cardData().title || !cardData().context) { showToast('Заполните название и описание'); return; }
+  nextButton.disabled = true;
+  try {
+    await request('/api/tasks/' + state.taskId, 'PATCH', { ...taskPayload(), confirmed: true });
+    await post('/api/tasks/' + state.taskId + '/publish', { confirmed: true });
+    state.step = 1;
+    state.taskId = null;
+    state.questionDraft = '';
+    state.reviewSignature = '';
+    draftInput.value = '';
+    $('#charCount').textContent = '0';
+    $('#confirmCard').checked = false;
+    updateStep();
+    showToast('Задача сохранена на сервере и опубликована');
+    setView('catalog');
+  } catch (error) { showToast(error.message); }
+  finally { nextButton.disabled = false; }
 }
 
 const matchPanel = document.createElement('div');
@@ -204,7 +177,8 @@ matchPanel.innerHTML = '<div class="panel-heading"><div><strong>Подбор з�
 $('.catalog-toolbar').before(matchPanel);
 const searchInput = $('.search-box input');
 const sortSelect = $('.catalog-toolbar select');
-sortSelect.options[0].textContent = 'Сначала подходящие';
+sortSelect.options[0].textContent = 'Сначала с высоким рейтингом';
+sortSelect.add(new Option('Сначала подходящие', 'matches'));
 const filterButton = $('.filter-button');
 filterButton.innerHTML = 'Только подходящие';
 function taskElement(task) {
@@ -214,13 +188,18 @@ function taskElement(task) {
   top.className = 'task-card-top';
   const status = document.createElement('span');
   status.className = `status-pill ${task.demo ? 'draft' : 'ready'}`;
-  status.textContent = task.demo ? 'Пример' : 'Опубликована';
+  status.textContent = ({ draft: 'Требует уточнения', working: 'Рабочая', ready: 'Готовая', priority: 'Приоритетная' })[task.level];
+  status.className = 'status-pill ' + (task.level === 'priority' ? 'ready' : task.level);
   top.append(status);
+  const readiness = document.createElement('span');
+  readiness.className = 'task-score';
+  readiness.textContent = task.score + ' / 100';
+  top.append(readiness);
   const match = state.matches?.find(x => x.id === task.id);
   if (match) {
     const score = document.createElement('span');
     score.className = 'task-score';
-    score.textContent = `${match.score}%`;
+    score.textContent = `Подходит: ${match.score}%`;
     score.title = 'Совпадение с навыками команды';
     top.append(score);
   }
@@ -252,9 +231,12 @@ function renderCatalog() {
   const query = searchInput.value.trim().toLowerCase();
   const scores = new Map((state.matches || []).map(x => [x.id, x.score]));
   let tasks = allTasks().filter(task => `${task.title} ${task.context} ${task.subject}`.toLowerCase().includes(query));
+  const level = document.querySelector('select[aria-label="Уровень готовности"]')?.value;
+  if (level) tasks = tasks.filter(task => task.level === level);
   if (state.matchOnly) tasks = tasks.filter(task => (scores.get(task.id) || 0) >= 50);
-  if (sortSelect.selectedIndex === 0 && state.matches) tasks.sort((a, b) => (scores.get(b.id) || 0) - (scores.get(a.id) || 0));
-  else tasks.sort((a, b) => b.created - a.created);
+  if (sortSelect.selectedIndex === 2 && state.matches) tasks.sort((a, b) => (scores.get(b.id) || 0) - (scores.get(a.id) || 0));
+  else if (sortSelect.selectedIndex === 1) tasks.sort((a, b) => (b.created || 0) - (a.created || 0));
+  else tasks.sort((a, b) => b.score - a.score);
   catalog.replaceChildren(...tasks.map(taskElement));
   if (!tasks.length) {
     const empty = document.createElement('p');
@@ -271,12 +253,16 @@ taskDialog.innerHTML = '<button class="dialog-close" type="button" aria-label="�
 document.body.append(taskDialog);
 taskDialog.querySelector('.dialog-close').addEventListener('click', () => taskDialog.close());
 taskDialog.addEventListener('click', event => { if (event.target === taskDialog) taskDialog.close(); });
-function openTask(task) {
-  taskDialog.querySelector('h2').textContent = task.title;
-  taskDialog.querySelector('.dialog-context').textContent = task.context;
-  taskDialog.querySelector('.dialog-result').textContent = task.result || 'В примере не указано.';
-  taskDialog.querySelector('.dialog-criteria').textContent = task.criteria || 'В примере не указаны.';
-  taskDialog.showModal();
+async function openTask(task) {
+  try {
+    const current = await request('/api/tasks/' + task.id);
+    taskDialog.querySelector('h2').textContent = current.title;
+    taskDialog.querySelector('.dialog-context').textContent = current.context;
+    taskDialog.querySelector('.dialog-result').textContent = current.result || 'Не указано';
+    taskDialog.querySelector('.dialog-criteria').textContent = current.criteria || 'Не указано';
+    renderTaskActions(current);
+    if (!taskDialog.open) taskDialog.showModal();
+  } catch (error) { showToast(error.message); }
 }
 $('#matchButton').addEventListener('click', async () => {
   const skills = $('#teamSkills').value.trim();
@@ -299,7 +285,7 @@ $('#matchButton').addEventListener('click', async () => {
     $('#matchStatus').textContent = 'Показано локальное совпадение по словам.';
   } finally {
     button.disabled = false;
-    sortSelect.selectedIndex = 0;
+  sortSelect.selectedIndex = 2;
     renderCatalog();
   }
 });
@@ -328,25 +314,23 @@ $('#improveDraft').addEventListener('click', async () => {
   } finally { button.disabled = false; $('#charCount').textContent = draftInput.value.length; }
 });
 nextButton.addEventListener('click', async () => {
-  if (state.step === 1) {
-    if (draftInput.value.trim().length < 15) { showToast('Добавьте хотя бы несколько слов о задаче'); draftInput.focus(); return; }
-    state.step = 2;
-    updateStep();
-    nextButton.disabled = true;
-    await getQuestions();
-    nextButton.disabled = false;
-    return;
-  }
-  if (state.step === 2) {
-    nextButton.disabled = true;
-    nextButton.textContent = 'Создаём карточку…';
-    await generateCard();
-    state.step = 3;
-    updateStep();
-    await reviewCard();
-    return;
-  }
-  publish();
+  nextButton.disabled = true;
+  backButton.disabled = true;
+  try {
+    if (state.step === 1) {
+      if (draftInput.value.trim().length < 15) throw new Error('Опишите задачу: минимум 15 символов');
+      await getQuestions();
+      state.step = 2;
+      updateStep();
+    } else if (state.step === 2) {
+      nextButton.textContent = 'Создаём карточку…';
+      await generateCard();
+      state.step = 3;
+      updateStep();
+      await reviewCard();
+    } else { await publish(); }
+  } catch (error) { showToast(error.message); updateStep(); }
+  finally { nextButton.disabled = false; backButton.disabled = false; }
 });
 backButton.addEventListener('click', () => { if (state.step > 1) { state.step--; updateStep(); } });
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));

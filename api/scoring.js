@@ -5,7 +5,7 @@ const scoringRules = [
   { field: 'successCriteria', points: 15, test: (value) => Array.isArray(value) && value.length >= 2, missing: 'Добавьте минимум два критерия успеха' },
   { field: 'constraints', points: 10, test: (value) => Array.isArray(value) && value.length > 0, missing: 'Укажите ограничения задачи' },
   { field: 'users', points: 10, test: (value) => Array.isArray(value) && value.length > 0, missing: 'Укажите пользователей и целевую аудиторию' },
-  { field: 'contact', points: 10, test: (value) => typeof value === 'string' && value.trim().length >= 5, missing: 'Добавьте контакт или формат обратной связи' }
+  { field: 'contact', points: 10, test: (value) => typeof value === 'string' && value.trim().length >= 5, missing: 'Укажите контакт и формат обратной связи' }
 ];
 
 function getLevel(score) {
@@ -21,7 +21,9 @@ function calculateScore(task) {
   let score = 0;
 
   scoringRules.forEach((rule) => {
-    const passed = rule.test(task[rule.field]);
+    let value = Array.isArray(task[rule.field]) ? task[rule.field].filter(x => typeof x === 'string' && x.trim()) : task[rule.field];
+    if (rule.field === 'constraints' && typeof task.deadline === 'string' && task.deadline.trim()) value = [...(Array.isArray(value) ? value : []), task.deadline];
+    const passed = task.confirmed === true && rule.test(value) && (rule.field !== 'contact' || Boolean(task.interactionFormat?.trim()));
     breakdown[rule.field] = { points: passed ? rule.points : 0, maxPoints: rule.points, passed };
     if (passed) score += rule.points;
     else missingInformation.push(rule.missing);
