@@ -7,19 +7,53 @@ const progressBar = document.querySelector('#progressBar');
 const stepLabel = document.querySelector('#stepLabel');
 const stepNumber = document.querySelector('#stepNumber');
 const stepTitle = document.querySelector('#stepTitle');
+const stepDescription = document.querySelector('#stepDescription');
 const toast = document.querySelector('#toast');
 const themeToggle = document.querySelector('#themeToggle');
+const profileToggle = document.querySelector('#profileToggle');
+const profilePanel = document.querySelector('#profilePanel');
+const profileForm = document.querySelector('#profileForm');
+const profileFirstNameInput = document.querySelector('#profileFirstNameInput');
+const profileLastNameInput = document.querySelector('#profileLastNameInput');
+const profilePhoneInput = document.querySelector('#profilePhoneInput');
+const profileEmailInput = document.querySelector('#profileEmailInput');
+const profileCancel = document.querySelector('#profileCancel');
 const example = 'Мне нужен интерактивный урок истории Казахстана для 8 класса, чтобы ученики лучше поняли тему «Алаш Орда» и не просто заучивали даты.';
+
+const defaultProfile = { firstName: 'Дамир', lastName: 'Боталбаев', phone: '+7 (700) 000-00-00', email: 'damir@edutask.kz' };
+const savedProfile = JSON.parse(localStorage.getItem('edutask-profile') || '{}');
+let profile = { ...defaultProfile, ...savedProfile };
+if (savedProfile.name && !savedProfile.firstName) { const nameParts = savedProfile.name.trim().split(/\s+/); profile.firstName = nameParts.shift() || defaultProfile.firstName; profile.lastName = nameParts.join(' ') || defaultProfile.lastName; }
+function updateProfileUI() {
+  const fullName = [profile.firstName, profile.lastName].filter(Boolean).join(' ');
+  const initials = fullName.split(/\s+/).filter(Boolean).map((part) => part[0]).slice(0, 2).join('').toUpperCase();
+  document.querySelector('.profile-avatar').textContent = initials || 'П';
+  document.querySelector('.profile-name').textContent = fullName;
+  profileFirstNameInput.value = profile.firstName;
+  profileLastNameInput.value = profile.lastName;
+  profilePhoneInput.value = profile.phone;
+  profileEmailInput.value = profile.email;
+}
+function closeProfile() { profilePanel.hidden = true; profileToggle.setAttribute('aria-expanded', 'false'); }
+updateProfileUI();
 
 function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 3000); }
 function setView(view) { document.querySelector('#createView').classList.toggle('hidden', view !== 'create'); document.querySelector('#catalogView').classList.toggle('hidden', view !== 'catalog'); document.querySelectorAll('[data-view]').forEach((button) => button.classList.toggle('active', button.dataset.view === view)); if (view === 'catalog') window.scrollTo({ top: 0, behavior: 'smooth' }); }
-function updateStep() { document.querySelectorAll('.step-content').forEach((section, index) => section.classList.toggle('active-step', index + 1 === state.step)); progressBar.style.width = `${state.step * 33.333}%`; stepLabel.textContent = `Шаг ${state.step} из 3`; stepNumber.textContent = String(state.step).padStart(2, '0'); backButton.classList.toggle('hidden', state.step === 1); nextButton.innerHTML = state.step === 3 ? 'Опубликовать задачу <span>↗</span>' : 'Продолжить <span>→</span>'; stepTitle.textContent = state.step === 1 ? 'Опишите педагогическую задачу' : state.step === 2 ? 'Уточним детали' : 'Проверьте карточку задачи'; document.querySelectorAll('.timeline-item').forEach((item, index) => item.classList.toggle('current', index + 1 === state.step)); }
+function updateStep() { document.querySelectorAll('.step-content').forEach((section, index) => section.classList.toggle('active-step', index + 1 === state.step)); progressBar.style.width = `${state.step * 33.333}%`; stepLabel.textContent = `Шаг ${state.step} из 3`; stepNumber.textContent = String(state.step).padStart(2, '0'); backButton.classList.toggle('hidden', state.step === 1); nextButton.disabled = state.step === 1 && !draftInput.value.trim(); nextButton.innerHTML = state.step === 3 ? 'Опубликовать задачу <span>↗</span>' : state.step === 1 ? '<span class="button-ai-icon">✦</span> Продолжить с AI <span>→</span>' : 'Продолжить <span>→</span>'; stepTitle.textContent = state.step === 1 ? 'Что вы хотите создать?' : state.step === 2 ? 'Уточним детали' : 'Проверьте карточку задачи'; stepDescription.classList.toggle('hidden', state.step !== 1); stepDescription.textContent = 'Опишите задачу своими словами. AI задаст несколько уточняющих вопросов и предложит подходящее решение.'; document.querySelectorAll('.timeline-item').forEach((item, index) => item.classList.toggle('current', index + 1 === state.step)); }
 function generateCard() { const audience = document.querySelector('#audience').value; const subject = document.querySelector('#subject').value; const format = document.querySelector('#format').value; const deadline = document.querySelector('#deadline').value; const materials = document.querySelector('#materials').value; const constraint = document.querySelector('#constraint').value; const draft = draftInput.value.trim() || example; document.querySelector('#taskTitle').value = `${format} по предмету «${subject}»`; document.querySelector('#taskContext').value = `${draft}\n\nЦелевая аудитория: ${audience}. Уже есть: ${materials}.`; document.querySelector('#taskResult').value = `Готовый ${format.toLowerCase()} для ${audience.toLowerCase()} со структурой занятия, заданиями и способом проверить понимание темы. Срок: ${deadline}.`; document.querySelector('#taskCriteria').value = `Понятная структура урока\nМинимум 3 практических задания\nУчтено ограничение: ${constraint}`; }
 const savedDraft = localStorage.getItem('edutask-draft');
 if (savedDraft) { draftInput.value = savedDraft; charCount.textContent = savedDraft.length; }
-draftInput.addEventListener('input', () => { charCount.textContent = draftInput.value.length; localStorage.setItem('edutask-draft', draftInput.value); });
-document.querySelector('#fillExample').addEventListener('click', () => { draftInput.value = example; charCount.textContent = example.length; draftInput.focus(); });
-nextButton.addEventListener('click', () => { if (state.step === 1 && draftInput.value.trim().length < 15) { showToast('Добавьте хотя бы несколько слов о задаче'); draftInput.focus(); return; } if (state.step < 3) { if (state.step === 2) generateCard(); state.step += 1; updateStep(); return; } showToast('Задача опубликована в каталоге'); setTimeout(() => setView('catalog'), 700); });
+const quickExamples = {
+  interactive: 'Хочу создать интерактивный урок по истории Казахстана для 8 класса с картой событий и коротким квизом.',
+  quiz: 'Нужен способ проверить знания учеников по теме через короткую викторину с понятной обратной связью.',
+  project: 'Хочу запустить проектное задание, в котором студенты разработают решение для реальной образовательной задачи.',
+  adaptation: 'Нужно адаптировать сложный учебный материал для учеников с разным уровнем подготовки и темпом обучения.',
+};
+function setDraftValue(value) { draftInput.value = value; charCount.textContent = value.length; localStorage.setItem('edutask-draft', value); updateStep(); draftInput.focus(); }
+draftInput.addEventListener('input', () => { charCount.textContent = draftInput.value.length; localStorage.setItem('edutask-draft', draftInput.value); updateStep(); });
+document.querySelector('#fillExample').addEventListener('click', () => setDraftValue(example));
+document.querySelectorAll('[data-example]').forEach((chip) => chip.addEventListener('click', () => setDraftValue(quickExamples[chip.dataset.example])));
+nextButton.addEventListener('click', () => { if (state.step === 1 && draftInput.value.trim().length < 15) { showToast('Добавьте хотя бы несколько слов о задаче'); draftInput.focus(); return; } if (state.step < 3) { if (state.step === 1) { nextButton.disabled = true; nextButton.classList.add('is-loading'); nextButton.innerHTML = 'AI анализирует вашу задачу... <span class="loading-sparkle">✦</span>'; setTimeout(() => { state.step += 1; nextButton.classList.remove('is-loading'); updateStep(); }, 700); return; } if (state.step === 2) generateCard(); state.step += 1; updateStep(); return; } showToast('Задача опубликована в каталоге'); setTimeout(() => setView('catalog'), 700); });
 backButton.addEventListener('click', () => { if (state.step > 1) { state.step -= 1; updateStep(); } });
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
 document.querySelectorAll('.task-card .text-button').forEach((button) => button.addEventListener('click', () => showToast('Детали задачи откроются в следующей версии')));
@@ -77,4 +111,21 @@ themeToggle.addEventListener('click', () => {
   themeToggle.textContent = isDark ? '☀' : '☾';
 });
 if (savedTheme === 'dark') themeToggle.textContent = '☀';
+profileToggle.addEventListener('click', () => {
+  profilePanel.hidden = !profilePanel.hidden;
+  profileToggle.setAttribute('aria-expanded', String(!profilePanel.hidden));
+});
+profileCancel.addEventListener('click', () => { updateProfileUI(); closeProfile(); });
+profileForm.addEventListener('submit', (event) => {
+  event.preventDefault();
+  profile = { firstName: profileFirstNameInput.value.trim(), lastName: profileLastNameInput.value.trim(), phone: profilePhoneInput.value.trim(), email: profileEmailInput.value.trim() };
+  if (!profile.firstName || !profile.lastName) { (profileFirstNameInput.value ? profileLastNameInput : profileFirstNameInput).focus(); return; }
+  localStorage.setItem('edutask-profile', JSON.stringify(profile));
+  updateProfileUI();
+  closeProfile();
+  showToast('Профиль сохранён');
+});
+document.addEventListener('click', (event) => {
+  if (!profilePanel.hidden && !profilePanel.contains(event.target) && !profileToggle.contains(event.target)) closeProfile();
+});
 updateStep();

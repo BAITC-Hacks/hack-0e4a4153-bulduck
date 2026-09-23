@@ -8,16 +8,39 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="icon" type="image/svg+xml" href="./favicon.svg?v=2" />
+    <link rel="shortcut icon" type="image/svg+xml" href="./favicon.svg?v=2" />
     <link rel="stylesheet" href="styles.css" />
     <style>
-      .card-heading h2 { font-size: 32px; line-height: 1.15; }
+      .card-heading h2 { font-size: 32px; line-height: 1.15; margin: 0; }
+      .card-heading .section-kicker { margin-bottom: 16px; }
+      .main-card .card-heading { margin-bottom: 0; }
+      .step-description { max-width: 720px; margin: 12px 0 48px; color: #817a98; font-size: 14px; line-height: 1.6; }
+      .quick-examples { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin: 10px 0 24px; }
+      .quick-examples-label { width: 100%; color: #817a98; font-size: 12px; font-weight: 700; }
+      .example-chip { border: 1px solid #ded5f7; background: #faf8ff; color: #7054d9; border-radius: 999px; padding: 8px 12px; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; transition: transform .2s ease, background .2s ease, border-color .2s ease; }
+      .example-chip:hover { transform: translateY(-2px); background: #f0ebff; border-color: #b8a5ed; }
+      .button.primary:disabled { opacity: .48; cursor: not-allowed; box-shadow: none; transform: none; }
+      .button.is-loading { min-width: 230px; }
+      .loading-sparkle { display: inline-block; animation: sparkle-spin .8s linear infinite; }
+      @keyframes sparkle-spin { to { transform: rotate(360deg) scale(1.15); } }
+      body.dark-theme .example-chip { background: #2b2443; border-color: #4a3e70; color: #c5b8fa; }
+      @media (max-height: 850px) and (min-width: 801px) {
+        .hero { min-height: 190px; padding-top: 30px; padding-bottom: 30px; }
+        .main-card { padding-top: 28px; }
+        #draftInput { height: 180px; min-height: 160px; }
+      }
       .field-label { font-size: 14px; gap: 10px; }
-      .field-hint { margin: -2px 0 22px; font-size: 14px; line-height: 1.5; }
+      #stepOne > .field-label { margin-bottom: 10px; }
+      #stepOne > .field-hint { margin: 0 0 20px; font-size: 14px; line-height: 1.5; }
       .main-card .field-label textarea,
       .main-card .field-label input,
       .main-card .field-label select { width: 100%; font-size: 15px; }
-      #draftInput { min-height: 220px; }
-      .textarea-footer { font-size: 11px; margin-top: -8px; }
+      .main-card { min-height: 0; padding: 44px 48px 36px; }
+      #draftInput { width: 100%; min-height: 180px; height: 200px; max-height: 240px; display: block; }
+      .textarea-footer { display: flex; justify-content: space-between; width: 100%; margin-top: 8px; margin-bottom: 20px; font-size: 11px; }
+      .quick-examples + .example-prompt { min-height: 48px; margin: 0 0 28px; padding: 0 16px; }
+      .main-card .card-actions { margin-top: 28px; padding-top: 24px; }
       :root {
         --ink: #28233d;
         --muted: #77718c;
@@ -40,7 +63,7 @@
       .progress-track span { background: linear-gradient(90deg, #7054d9, #9a83ee); }
       textarea, input, select { transition: border-color .2s ease, box-shadow .2s ease, transform .2s ease; }
       textarea:hover, input:hover, select:hover { border-color: #b8a9e8; }
-      textarea:focus, input:focus, select:focus { transform: translateY(-1px); }
+      textarea:focus, input:focus, select:focus { transform: none; }
       .button:focus-visible, .theme-toggle:focus-visible, .text-button:focus-visible, .nav-link:focus-visible { outline: 3px solid #c9bdf2; outline-offset: 3px; }
       .hero, .progress-wrap, .main-card, .side-card, .catalog-header, .catalog-toolbar, .task-card { animation: rise-in .45s ease both; }
       .side-card { animation-delay: .08s; }
@@ -55,6 +78,20 @@
       .question-icon, .success-icon { background: #7054d9; }
       body.dark-theme .example-prompt, body.dark-theme .quote-card, body.dark-theme .question-intro, body.dark-theme .generated-banner { background: #302752; border-color: #4a3e70; }
       .theme-toggle { border: 1px solid var(--line); background: var(--cream); color: var(--ink); border-radius: 999px; padding: 8px 11px; cursor: pointer; font: inherit; font-size: 13px; }
+      .profile-chip { position: relative; }
+      .profile-trigger { display: flex; align-items: center; gap: 9px; border: 0; background: transparent; color: var(--ink); padding: 0; font: inherit; cursor: pointer; }
+      .profile-trigger:hover .profile-name { color: #7054d9; }
+      .profile-panel { position: absolute; z-index: 10; top: calc(100% + 14px); right: 0; width: 310px; padding: 20px; background: var(--white); border: 1px solid var(--line); border-radius: 14px; box-shadow: 0 18px 40px rgba(49, 35, 100, .16); }
+      .profile-panel[hidden] { display: none; }
+      .profile-panel h3 { margin: 0 0 4px; font-family: var(--serif); font-size: 20px; }
+      .profile-panel-intro { margin: 0 0 18px; color: var(--muted); font-size: 12px; }
+      .profile-form { display: grid; gap: 12px; }
+      .profile-form label { display: grid; gap: 6px; color: var(--ink); font-size: 11px; font-weight: 800; }
+      .profile-form input { width: 100%; font-size: 13px; padding: 10px 11px; }
+      .profile-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 4px; }
+      .profile-actions .button { padding: 9px 12px; font-size: 11px; }
+      body.dark-theme .profile-panel { background: #211b35; }
+      body.dark-theme .profile-form input { background: #2b2443; }
       body.dark-theme { --ink: #f5f2ff; --muted: #aaa3c2; --line: #3c3555; --cream: #171426; --white: #211b35; }
       body.dark-theme .topbar, body.dark-theme .main-card, body.dark-theme .side-card, body.dark-theme .task-card, body.dark-theme .search-box, body.dark-theme .catalog-toolbar select, body.dark-theme input, body.dark-theme textarea, body.dark-theme select { background: #211b35; color: var(--ink); }
       body.dark-theme .hero { background: linear-gradient(135deg, #292143 0%, #211b35 100%); }
@@ -62,9 +99,11 @@
       body.dark-theme .example-prompt, body.dark-theme .quote-card, body.dark-theme .question-intro, body.dark-theme .generated-banner { background: #2b2443; }
       body.dark-theme .theme-toggle { background: #2b2443; color: #f5f2ff; }
       @media (max-width: 800px) {
+        .main-card { padding: 32px 24px 28px; }
         .card-heading h2 { font-size: 27px; }
         .field-hint { font-size: 13px; }
-        #draftInput { min-height: 180px; }
+        #draftInput { height: 180px; min-height: 160px; }
+        .profile-panel { right: -8px; width: min(310px, calc(100vw - 32px)); }
       }
     </style>
   </head>
@@ -76,7 +115,7 @@
           <button class="nav-link active" data-view="create">Создать задачу</button>
           <button class="nav-link" data-view="catalog">Каталог задач <span class="nav-count">12</span></button>
         </nav>
-        <div class="profile-chip"><span class="profile-avatar">ДБ</span><span class="profile-name">Дамир Боталбаев</span><button id="themeToggle" class="theme-toggle" type="button" aria-label="Переключить тему">☾</button><span class="chevron">⌄</span></div>
+        <div class="profile-chip"><button id="profileToggle" class="profile-trigger" type="button" aria-expanded="false" aria-controls="profilePanel"><span class="profile-avatar">ДБ</span><span class="profile-name">Дамир Боталбаев</span><span class="chevron">⌄</span></button><button id="themeToggle" class="theme-toggle" type="button" aria-label="Переключить тему">☾</button><section id="profilePanel" class="profile-panel" hidden><h3>Профиль</h3><p class="profile-panel-intro">Измените контактные данные для своего аккаунта.</p><form id="profileForm" class="profile-form"><label>Имя<input id="profileFirstNameInput" type="text" value="Дамир" autocomplete="given-name" required /></label><label>Фамилия<input id="profileLastNameInput" type="text" value="Боталбаев" autocomplete="family-name" required /></label><label>Номер телефона<input id="profilePhoneInput" type="tel" value="+7 (700) 000-00-00" autocomplete="tel" /></label><label>Электронная почта<input id="profileEmailInput" type="email" value="damir@edutask.kz" autocomplete="email" /></label><div class="profile-actions"><button id="profileCancel" class="button secondary" type="button">Отмена</button><button class="button primary" type="submit">Сохранить</button></div></form></section></div>
       </header>
 
       <main>
@@ -89,11 +128,12 @@
           <div class="progress-wrap"><div class="progress-label"><span>Создание задачи</span><span id="stepLabel">Шаг 1 из 3</span></div><div class="progress-track"><span id="progressBar"></span></div></div>
           <div class="workspace-grid">
             <div class="main-card">
-              <div class="card-heading"><div><p class="section-kicker">Шаг <span id="stepNumber">01</span> / 03</p><h2 id="stepTitle">Опишите педагогическую задачу</h2></div><span class="ai-badge"><span class="sparkle">✦</span> AI-помощник</span></div>
+              <div class="card-heading"><div><p class="section-kicker">Шаг <span id="stepNumber">01</span> / 03</p><h2 id="stepTitle">Что вы хотите создать?</h2><p id="stepDescription" class="step-description">Опишите задачу своими словами. AI задаст несколько уточняющих вопросов и предложит подходящее решение.</p></div><span class="ai-badge"><span class="sparkle">✦</span> AI-помощник</span></div>
               <div id="stepOne" class="step-content active-step">
-                <label class="field-label" for="draftInput">Что вы хотите изменить или создать?</label><p class="field-hint">Не стремитесь к идеальной формулировке — AI задаст уточняющие вопросы.</p>
-                <textarea id="draftInput" rows="6" maxlength="500" aria-describedby="draftHint" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
+                <label class="field-label" for="draftInput">Расскажите о задаче</label><p class="field-hint">Чем больше деталей вы добавите, тем точнее AI предложит решение.</p>
+                <textarea id="draftInput" rows="6" maxlength="500" aria-describedby="draftHint" placeholder="Например: хочу создать интерактивный урок по истории Казахстана для 8 класса, чтобы ученики лучше запомнили ключевые события..."></textarea>
                 <div class="textarea-footer"><span id="draftHint" class="char-count"><span id="charCount">0</span> / 500</span><span>Можно писать как есть</span></div>
+                <div class="quick-examples"><span class="quick-examples-label">Или начните с примера</span><button class="example-chip" type="button" data-example="interactive">Интерактивный урок</button><button class="example-chip" type="button" data-example="quiz">Проверка знаний</button><button class="example-chip" type="button" data-example="project">Проектное задание</button><button class="example-chip" type="button" data-example="adaptation">Адаптация материала</button></div>
                 <div class="example-prompt"><span class="example-icon">✦</span><span>Подсказка</span><button id="fillExample" class="text-button">Заполнить примером</button></div>
               </div>
               <div id="stepTwo" class="step-content">
@@ -106,7 +146,7 @@
                 <label class="field-label">Название задачи<input id="taskTitle" value="Интерактивный урок по истории Казахстана" /></label><label class="field-label">Контекст и потребность<textarea id="taskContext" rows="4"></textarea></label>
                 <div class="two-columns"><label class="field-label">Ожидаемый результат<textarea id="taskResult" rows="3"></textarea></label><label class="field-label">Критерии успеха<textarea id="taskCriteria" rows="3"></textarea></label></div>
               </div>
-              <div class="card-actions"><button id="backButton" class="button secondary hidden">Назад</button><button id="nextButton" class="button primary">Продолжить <span>→</span></button></div>
+              <div class="card-actions"><button id="backButton" class="button secondary hidden">Назад</button><button id="nextButton" class="button primary" aria-live="polite" disabled><span class="button-ai-icon">✦</span> Продолжить с AI <span>→</span></button></div>
             </div>
             <aside class="side-card"><div class="side-card-heading"><span class="live-dot"></span><span>Как это работает</span></div><div class="timeline"><div class="timeline-item current"><span>1</span><div><strong>Опишите задачу</strong><p>Коротко расскажите о потребности</p></div></div><div class="timeline-line"></div><div class="timeline-item"><span>2</span><div><strong>Уточните детали</strong><p>AI поможет ничего не упустить</p></div></div><div class="timeline-line"></div><div class="timeline-item"><span>3</span><div><strong>Получите предложения</strong><p>Команды предложат свои решения</p></div></div></div><div class="quote-card"><span>“</span><p>Чем точнее задача, тем полезнее решение.</p><small>Принцип EduTask</small></div></aside>
           </div>
