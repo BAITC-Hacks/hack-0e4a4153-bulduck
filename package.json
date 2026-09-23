@@ -4,7 +4,7 @@
   "private": true,
   "description": "EduTask MVP backend",
   "scripts": {
-    "start": "node api/server.js",
-    "dev": "node --watch api/server.js"
+    "start": "node server.js",
+    "dev": "node --watch server.js"
   }
 }
