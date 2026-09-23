@@ -20,4 +20,50 @@ nextButton.addEventListener('click', () => { if (state.step === 1 && draftInput.
 backButton.addEventListener('click', () => { if (state.step > 1) { state.step -= 1; updateStep(); } });
 document.querySelectorAll('[data-view]').forEach((button) => button.addEventListener('click', () => setView(button.dataset.view)));
 document.querySelectorAll('.task-card .text-button').forEach((button) => button.addEventListener('click', () => showToast('Детали задачи откроются в следующей версии')));
+
+const catalogSearch = document.querySelector('.search-box input');
+const catalogSort = document.querySelector('.catalog-toolbar select');
+const catalogGrid = document.querySelector('.catalog-grid');
+const catalogCards = [...document.querySelectorAll('.task-card')];
+const filterButton = document.querySelector('.filter-button');
+const catalogEmpty = document.createElement('p');
+catalogEmpty.hidden = true;
+catalogEmpty.textContent = 'По вашему запросу задач не найдено. Попробуйте изменить поиск или фильтр.';
+catalogEmpty.style.cssText = 'padding:32px;text-align:center;color:#7b8981;background:#fff;border:1px solid #dfe6e1;border-radius:12px';
+catalogGrid.after(catalogEmpty);
+const filterModes = [
+  { label: 'Все', className: null },
+  { label: 'Готовые', className: 'ready' },
+  { label: 'Рабочие', className: 'working' },
+  { label: 'Черновики', className: 'draft' },
+];
+let filterIndex = 0;
+
+function updateCatalog() {
+  const query = catalogSearch.value.trim().toLowerCase();
+  const activeFilter = filterModes[filterIndex].className;
+  const matchingCards = catalogCards.filter((card) => {
+    const matchesQuery = card.textContent.toLowerCase().includes(query);
+    const matchesFilter = !activeFilter || card.querySelector(`.status-pill.${activeFilter}`);
+    return matchesQuery && matchesFilter;
+  });
+  const sortedCards = [...matchingCards].sort((a, b) => {
+    if (catalogSort.selectedIndex === 1) return catalogCards.indexOf(a) - catalogCards.indexOf(b);
+    return Number(b.querySelector('.task-score').textContent) - Number(a.querySelector('.task-score').textContent);
+  });
+
+  catalogCards.forEach((card) => { card.hidden = !matchingCards.includes(card); });
+  sortedCards.forEach((card) => catalogGrid.appendChild(card));
+  catalogEmpty.hidden = matchingCards.length > 0;
+}
+
+catalogSearch.addEventListener('input', updateCatalog);
+catalogSort.addEventListener('change', updateCatalog);
+filterButton.addEventListener('click', () => {
+  filterIndex = (filterIndex + 1) % filterModes.length;
+  const mode = filterModes[filterIndex];
+  filterButton.querySelector('span').textContent = mode.label;
+  filterButton.setAttribute('aria-label', `Фильтр: ${mode.label}`);
+  updateCatalog();
+});
 updateStep();

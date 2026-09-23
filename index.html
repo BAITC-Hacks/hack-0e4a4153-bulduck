@@ -9,6 +9,21 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
+    <style>
+      .card-heading h2 { font-size: 32px; line-height: 1.15; }
+      .field-label { font-size: 14px; gap: 10px; }
+      .field-hint { margin: -2px 0 22px; font-size: 14px; line-height: 1.5; }
+      .main-card .field-label textarea,
+      .main-card .field-label input,
+      .main-card .field-label select { width: 100%; font-size: 15px; }
+      #draftInput { min-height: 220px; }
+      .textarea-footer { font-size: 11px; margin-top: -8px; }
+      @media (max-width: 800px) {
+        .card-heading h2 { font-size: 27px; }
+        .field-hint { font-size: 13px; }
+        #draftInput { min-height: 180px; }
+      }
+    </style>
   </head>
   <body>
     <div class="app-shell">
@@ -18,7 +33,7 @@
           <button class="nav-link active" data-view="create">Создать задачу</button>
           <button class="nav-link" data-view="catalog">Каталог задач <span class="nav-count">12</span></button>
         </nav>
-        <div class="profile-chip"><span class="profile-avatar">АИ</span><span class="profile-name">Алия И.</span><span class="chevron">⌄</span></div>
+        <div class="profile-chip"><span class="profile-avatar">ДБ</span><span class="profile-name">Дамир Боталбаев</span><span class="chevron">⌄</span></div>
       </header>
 
       <main>
@@ -34,8 +49,8 @@
               <div class="card-heading"><div><p class="section-kicker">Шаг <span id="stepNumber">01</span> / 03</p><h2 id="stepTitle">Опишите педагогическую задачу</h2></div><span class="ai-badge"><span class="sparkle">✦</span> AI-помощник</span></div>
               <div id="stepOne" class="step-content active-step">
                 <label class="field-label" for="draftInput">Что вы хотите изменить или создать?</label><p class="field-hint">Не стремитесь к идеальной формулировке — AI задаст уточняющие вопросы.</p>
-                <textarea id="draftInput" rows="6" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
-                <div class="textarea-footer"><span class="char-count"><span id="charCount">0</span> / 500</span><span>Можно писать как есть</span></div>
+                <textarea id="draftInput" rows="6" maxlength="500" aria-describedby="draftHint" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
+                <div class="textarea-footer"><span id="draftHint" class="char-count"><span id="charCount">0</span> / 500</span><span>Можно писать как есть</span></div>
                 <div class="example-prompt"><span class="example-icon">✦</span><span>Подсказка</span><button id="fillExample" class="text-button">Заполнить примером</button></div>
               </div>
               <div id="stepTwo" class="step-content">
