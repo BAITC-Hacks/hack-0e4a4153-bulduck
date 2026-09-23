@@ -7,7 +7,7 @@
 ## AI
 
 POST /api/improve — {draft} → {improved}
-POST /api/questions — {draft} → {questions}, минимум 3 вопроса
+POST /api/questions — {draft} → {questions:[{question,answer}]}, минимум 3 вопроса с вариантами ответов для проверки преподавателем
 POST /api/generate — {draft, audience, subject, format, deadline, materials, constraint, answers:[{question,answer}]} → {title,context,result,criteria}
 POST /api/review — {title,context,result,criteria} → {issues}
 POST /api/match — {profile:{skills,deadline},tasks:[...]} → {matches:[{id,score,reason}]}

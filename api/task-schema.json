@@ -92,7 +92,15 @@
     "questions": {
       "type": "array",
       "items": {
-        "type": "string"
+        "oneOf": [
+          { "type": "string" },
+          {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["question", "answer"],
+            "properties": { "question": { "type": "string" }, "answer": { "type": "string" } }
+          }
+        ]
       }
     },
     "missingInformation": {

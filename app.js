@@ -48,12 +48,14 @@ async function request(route, method = 'GET', data) {
 const post = (route, data) => request(route, 'POST', data);
 const questionPanel = document.createElement('div');
 questionPanel.className = 'ai-panel';
-questionPanel.innerHTML = '<strong>Вопросы по вашему описанию</strong><p class="panel-status" role="status"></p><div class="question-fields"></div>';
+questionPanel.innerHTML = '<strong>AI предлагает ответы по вашему описанию</strong><p class="panel-status" role="status"></p><div class="question-fields"></div>';
 $('#stepTwo .question-intro').after(questionPanel);
 function renderQuestions(questions) {
   const fields = questionPanel.querySelector('.question-fields');
   fields.replaceChildren();
-  state.questions = questions.map(question => ({ question, answer: '' }));
+  state.questions = questions.map(item => typeof item === 'string'
+    ? { question: item, answer: '' }
+    : { question: item.question, answer: item.answer || '' });
   for (const item of state.questions) {
     const label = document.createElement('label');
     label.className = 'field-label';
@@ -61,7 +63,8 @@ function renderQuestions(questions) {
     const input = document.createElement('textarea');
     input.rows = 2;
     input.maxLength = 500;
-    input.placeholder = 'Ваш ответ (можно пропустить)';
+    input.value = item.answer;
+    input.placeholder = 'Добавьте или измените ответ';
     input.addEventListener('input', () => { item.answer = input.value.trim(); });
     label.append(input);
     fields.append(label);
@@ -75,7 +78,7 @@ async function getQuestions() {
   state.taskId = response.id;
   state.questionDraft = draft;
   renderQuestions(response.questions);
-  questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-подсказки: AI недоступен или отключён' : 'Ответьте на вопросы по задаче';
+  questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-варианты ответов. Проверьте и измените их перед созданием карточки.' : 'AI предложил варианты ответов. Проверьте и измените их перед созданием карточки.';
 }
 function formData() {
   return {
