@@ -34,11 +34,23 @@ async function askAI(instruction, input, schema, name) {
 
 function localQuestions(draft) {
   const questions = [];
-  if (!/(цель|науч|осво|понял|смог|умел)/i.test(draft)) questions.push('Чему именно должны научиться участники?');
+  if (!/(цель|науч|осво|поня|смог|умел)/i.test(draft)) questions.push('Чему именно должны научиться участники?');
   if (!/(класс|курс|студент|ученик|преподавател)/i.test(draft)) questions.push('Для какого возраста или уровня подготовки это нужно?');
   if (!/(провер|оцен|тест|результат|критери)/i.test(draft)) questions.push('Как вы поймёте, что решение помогло?');
   if (!/(минут|недел|месяц|интернет|ограничен|бюджет)/i.test(draft)) questions.push('Есть ли ограничения по времени, доступу или материалам?');
-  return questions.slice(0, 3).length ? questions.slice(0, 3) : ['Какой результат будет самым полезным для вашей аудитории?'];
+  const selected = questions.slice(0, 3).length ? questions.slice(0, 3) : ['Какой результат будет самым полезным для вашей аудитории?'];
+  return selected.map(question => ({
+    question,
+    answer: question.startsWith('Чему')
+      ? 'Можно сформулировать цель как умение объяснить тему своими словами и применить знания в задании.'
+      : question.startsWith('Для какого')
+        ? 'Уровень подготовки стоит уточнить у преподавателя.'
+        : question.startsWith('Как вы поймёте')
+          ? 'Можно проверить понимание коротким заданием или мини-тестом после занятия.'
+          : question.startsWith('Есть ли')
+            ? 'Ограничения по времени, доступу и материалам стоит уточнить у преподавателя.'
+            : 'Полезным результатом может стать готовый материал с заданиями и способом проверки понимания.',
+  }));
 }
 
 function localReview(card) {
@@ -73,8 +85,8 @@ async function handleApi(route, body = {}) {
     const draft = clean(body.draft, 501);
     if (draft.length < 15 || draft.length > 500) throw { status: 400, message: 'Некорректное описание.' };
     if (!key) return { questions: localQuestions(draft), demo: true };
-    const result = await askAI('Задай 2–3 коротких конкретных уточняющих вопроса к педагогической задаче на русском. Не спрашивай уже известное. Не выдумывай факты.', { draft }, obj({ questions: { type: 'array', items: str } }), 'clarifying_questions');
-    return { questions: result.questions.filter(x => typeof x === 'string' && x.trim()).slice(0, 3) };
+    const result = await askAI('Задай 2–3 коротких уточняющих вопроса к педагогической задаче на русском и предложи ответ на каждый. Ответы должны помогать сформулировать задачу. Если факт не указан, предложи вариант со словами «Можно...» или прямо укажи, что нужно уточнение. Не выдавай предположения за факты.', { draft }, obj({ questions: { type: 'array', items: obj({ question: str, answer: str }) } }), 'clarifying_answers');
+    return { questions: result.questions.filter(x => typeof x?.question === 'string' && x.question.trim()).slice(0, 3).map(x => ({ question: clean(x.question, 200), answer: clean(x.answer, 500) })) };
   }
   if (route === '/api/generate') {
     const input = Object.fromEntries(['draft', 'audience', 'subject', 'format', 'deadline', 'materials', 'constraint'].map(k => [k, clean(body[k], 1000)]));

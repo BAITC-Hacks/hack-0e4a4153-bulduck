@@ -51,20 +51,34 @@ async function post(route, data) {
 }
 function fallbackQuestions(draft) {
   const questions = [];
-  if (!/(цель|науч|осво|понял|смог|умел)/i.test(draft)) questions.push('Чему именно должны научиться участники?');
+  if (!/(цель|науч|осво|поня|смог|умел)/i.test(draft)) questions.push('Чему именно должны научиться участники?');
   if (!/(класс|курс|студент|ученик|преподавател)/i.test(draft)) questions.push('Для какого возраста или уровня подготовки это нужно?');
   if (!/(провер|оцен|тест|результат|критери)/i.test(draft)) questions.push('Как вы поймёте, что решение помогло?');
   if (!/(минут|недел|месяц|интернет|ограничен|бюджет)/i.test(draft)) questions.push('Есть ли ограничения по времени или доступу?');
-  return questions.slice(0, 3).length ? questions.slice(0, 3) : ['Какой результат будет самым полезным для вашей аудитории?'];
+  const selected = questions.slice(0, 3).length ? questions.slice(0, 3) : ['Какой результат будет самым полезным для вашей аудитории?'];
+  return selected.map(question => ({
+    question,
+    answer: question.startsWith('Чему')
+      ? 'Можно предложить цель: участники объясняют тему своими словами и применяют знания в задании.'
+      : question.startsWith('Для какого')
+        ? 'Уровень подготовки нужно уточнить у преподавателя.'
+        : question.startsWith('Как вы поймёте')
+          ? 'Можно проверить понимание коротким заданием или мини-тестом.'
+          : question.startsWith('Есть ли')
+            ? 'Ограничения по времени и доступу нужно уточнить у преподавателя.'
+            : 'Можно подготовить материал с заданиями и способом проверки понимания.',
+  }));
 }
 const questionPanel = document.createElement('div');
 questionPanel.className = 'ai-panel';
-questionPanel.innerHTML = '<strong>Вопросы по вашему описанию</strong><p class="panel-status" role="status"></p><div class="question-fields"></div>';
+questionPanel.innerHTML = '<strong>AI предлагает ответы по вашему описанию</strong><p class="panel-status" role="status"></p><div class="question-fields"></div>';
 $('#stepTwo .question-intro').after(questionPanel);
 function renderQuestions(questions) {
   const fields = questionPanel.querySelector('.question-fields');
   fields.replaceChildren();
-  state.questions = questions.map(question => ({ question, answer: '' }));
+  state.questions = questions.map(item => typeof item === 'string'
+    ? { question: item, answer: '' }
+    : { question: item.question, answer: item.answer || '' });
   for (const item of state.questions) {
     const label = document.createElement('label');
     label.className = 'field-label';
@@ -72,7 +86,8 @@ function renderQuestions(questions) {
     const input = document.createElement('textarea');
     input.rows = 2;
     input.maxLength = 500;
-    input.placeholder = 'Ваш ответ (можно пропустить)';
+    input.value = item.answer;
+    input.placeholder = 'Добавьте или измените ответ';
     input.addEventListener('input', () => { item.answer = input.value.trim(); });
     label.append(input);
     fields.append(label);
@@ -82,14 +97,14 @@ async function getQuestions() {
   const draft = draftInput.value.trim();
   if (state.questionDraft === draft && state.questions.length) return;
   state.questionDraft = draft;
-  questionPanel.querySelector('.panel-status').textContent = 'Подбираем уточнения…';
+  questionPanel.querySelector('.panel-status').textContent = 'Анализируем описание и готовим варианты ответов…';
   try {
     const response = await post('/api/questions', { draft });
     renderQuestions(Array.isArray(response.questions) && response.questions.length ? response.questions : fallbackQuestions(draft));
-    questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-подсказки по вашему описанию' : 'Ответьте на важные для задачи вопросы';
+    questionPanel.querySelector('.panel-status').textContent = response.demo ? 'Демо-варианты ответов. Проверьте и измените при необходимости.' : 'AI предложил ответы. Проверьте и измените их при необходимости.';
   } catch {
     renderQuestions(fallbackQuestions(draft));
-    questionPanel.querySelector('.panel-status').textContent = 'Подсказки по вашему описанию';
+    questionPanel.querySelector('.panel-status').textContent = 'Локальные варианты ответов. Проверьте и измените при необходимости.';
   }
 }
 function formData() {
