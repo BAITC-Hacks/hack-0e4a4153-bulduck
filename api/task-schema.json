@@ -1,0 +1,104 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://edutask.local/schemas/task.json",
+  "title": "EduTask",
+  "description": "Структура педагогической задачи, которую преподаватель публикует для студенческих команд.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "title",
+    "context",
+    "users",
+    "subject",
+    "format",
+    "materials",
+    "constraints",
+    "expectedResult",
+    "successCriteria",
+    "deadline",
+    "score",
+    "level",
+    "status"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Уникальный идентификатор задачи."
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "description": "Короткое название задачи."
+    },
+    "context": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Контекст, проблема и потребность преподавателя."
+    },
+    "users": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Пользователи и целевая аудитория решения."
+    },
+    "subject": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Предмет или образовательное направление."
+    },
+    "format": {
+      "type": "string",
+      "minLength": 2,
+      "description": "Желаемый формат решения."
+    },
+    "materials": {
+      "type": "string",
+      "description": "Материалы и данные, уже доступные заказчику."
+    },
+    "constraints": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Сроки, технические, языковые и другие ограничения."
+    },
+    "expectedResult": {
+      "type": "string",
+      "minLength": 20,
+      "description": "Конкретный ожидаемый результат работы команды."
+    },
+    "successCriteria": {
+      "type": "array",
+      "minItems": 1,
+      "items": { "type": "string" },
+      "description": "Измеримые признаки успешного решения."
+    },
+    "deadline": {
+      "type": "string",
+      "description": "Желаемый срок выполнения."
+    },
+    "contact": {
+      "type": "string",
+      "description": "Контакт и формат обратной связи."
+    },
+    "score": {
+      "type": "integer",
+      "minimum": 0,
+      "maximum": 100,
+      "description": "Рейтинг готовности задачи."
+    },
+    "level": {
+      "type": "string",
+      "enum": ["draft", "working", "ready", "priority"],
+      "description": "Уровень готовности по рейтингу."
+    },
+    "status": {
+      "type": "string",
+      "enum": ["draft", "published", "in_review", "selected", "completed"],
+      "description": "Текущий статус задачи."
+    },
+    "missingInformation": {
+      "type": "array",
+      "items": { "type": "string" },
+      "description": "Данные, которых не хватает для повышения рейтинга."
+    }
+  }
+}

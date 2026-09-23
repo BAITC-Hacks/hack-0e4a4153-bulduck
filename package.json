@@ -1,0 +1,10 @@
+{
+  "name": "edutask-mvp",
+  "version": "0.1.0",
+  "private": true,
+  "description": "EduTask MVP backend",
+  "scripts": {
+    "start": "node api/server.js",
+    "dev": "node --watch api/server.js"
+  }
+}
