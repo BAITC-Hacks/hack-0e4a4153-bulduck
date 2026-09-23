@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="EduTask — превращаем педагогические задачи в понятные проекты для студенческих команд." />
+    <title>EduTask — задачи для образования</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="app-shell">
+      <header class="topbar">
+        <a class="brand" href="#" aria-label="EduTask"><span class="brand-mark">E</span><span>EduTask</span></a>
+        <nav class="topnav" aria-label="Основная навигация">
+          <button class="nav-link active" data-view="create">Создать задачу</button>
+          <button class="nav-link" data-view="catalog">Каталог задач <span class="nav-count">12</span></button>
+        </nav>
+        <div class="profile-chip"><span class="profile-avatar">АИ</span><span class="profile-name">Алия И.</span><span class="chevron">⌄</span></div>
+      </header>
+
+      <main>
+        <section class="hero">
+          <div><p class="eyebrow"><span class="eyebrow-dot"></span>Платформа педагогических проектов</p><h1>Хорошие идеи<br /><em>начинаются с задачи.</em></h1><p class="hero-copy">Опишите, что нужно изменить в обучении. AI поможет уточнить задачу, а студенческие команды предложат решение.</p></div>
+          <div class="hero-stats"><div><strong>47</strong><span>задач опубликовано</span></div><div><strong>18</strong><span>команд в каталоге</span></div></div>
+        </section>
+
+        <section id="createView" class="view-panel">
+          <div class="progress-wrap"><div class="progress-label"><span>Создание задачи</span><span id="stepLabel">Шаг 1 из 3</span></div><div class="progress-track"><span id="progressBar"></span></div></div>
+          <div class="workspace-grid">
+            <div class="main-card">
+              <div class="card-heading"><div><p class="section-kicker">Шаг <span id="stepNumber">01</span> / 03</p><h2 id="stepTitle">Опишите педагогическую задачу</h2></div><span class="ai-badge"><span class="sparkle">✦</span> AI-помощник</span></div>
+              <div id="stepOne" class="step-content active-step">
+                <label class="field-label" for="draftInput">Что вы хотите изменить или создать?</label><p class="field-hint">Не стремитесь к идеальной формулировке — AI задаст уточняющие вопросы.</p>
+                <textarea id="draftInput" rows="6" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
+                <div class="textarea-footer"><span class="char-count"><span id="charCount">0</span> / 500</span><span>Можно писать как есть</span></div>
+                <div class="example-prompt"><span class="example-icon">✦</span><span>Подсказка</span><button id="fillExample" class="text-button">Заполнить примером</button></div>
+              </div>
+              <div id="stepTwo" class="step-content">
+                <div class="question-intro"><span class="question-icon">?</span><div><strong>Уточним детали</strong><p>Ответьте на несколько вопросов, чтобы команда лучше поняла задачу.</p></div></div>
+                <div class="questions-grid"><label class="field-label">Для кого задача?<select id="audience"><option>Ученики 8 класса</option><option>Студенты 1 курса</option><option>Преподаватели</option></select></label><label class="field-label">Предмет или направление<select id="subject"><option>История Казахстана</option><option>Казахский язык</option><option>Английский язык</option><option>Другое</option></select></label><label class="field-label">Желаемый формат<select id="format"><option>Интерактивный урок</option><option>Веб-приложение</option><option>Набор заданий</option><option>Методические материалы</option></select></label><label class="field-label">Срок выполнения<select id="deadline"><option>До 2 недель</option><option>До 1 месяца</option><option>Гибкий срок</option></select></label></div>
+                <label class="field-label">Что уже есть у вас?<textarea id="materials" rows="3" placeholder="Материалы, учебник, программа, примеры...">Учебная программа и материалы урока</textarea></label><label class="field-label">Главное ограничение<textarea id="constraint" rows="2" placeholder="Например: слабый интернет, два языка, 45 минут...">Урок должен длиться 45 минут и работать онлайн</textarea></label>
+              </div>
+              <div id="stepThree" class="step-content">
+                <div class="generated-banner"><span class="success-icon">✓</span><div><strong>Карточка почти готова</strong><p>Проверьте формулировки перед публикацией.</p></div></div>
+                <label class="field-label">Название задачи<input id="taskTitle" value="Интерактивный урок по истории Казахстана" /></label><label class="field-label">Контекст и потребность<textarea id="taskContext" rows="4"></textarea></label>
+                <div class="two-columns"><label class="field-label">Ожидаемый результат<textarea id="taskResult" rows="3"></textarea></label><label class="field-label">Критерии успеха<textarea id="taskCriteria" rows="3"></textarea></label></div>
+              </div>
+              <div class="card-actions"><button id="backButton" class="button secondary hidden">Назад</button><button id="nextButton" class="button primary">Продолжить <span>→</span></button></div>
+            </div>
+            <aside class="side-card"><div class="side-card-heading"><span class="live-dot"></span><span>Как это работает</span></div><div class="timeline"><div class="timeline-item current"><span>1</span><div><strong>Опишите задачу</strong><p>Коротко расскажите о потребности</p></div></div><div class="timeline-line"></div><div class="timeline-item"><span>2</span><div><strong>Уточните детали</strong><p>AI поможет ничего не упустить</p></div></div><div class="timeline-line"></div><div class="timeline-item"><span>3</span><div><strong>Получите предложения</strong><p>Команды предложат свои решения</p></div></div></div><div class="quote-card"><span>“</span><p>Чем точнее задача, тем полезнее решение.</p><small>Принцип EduTask</small></div></aside>
+          </div>
+        </section>
+
+        <section id="catalogView" class="view-panel hidden"><div class="catalog-header"><div><p class="section-kicker">Открытый каталог</p><h2>Задачи, которым нужны решения</h2><p>Студенческие команды выбирают интересные проекты и отправляют предложения.</p></div><button class="button primary" data-view="create">+ Создать задачу</button></div><div class="catalog-toolbar"><div class="search-box"><span>⌕</span><input placeholder="Поиск по задачам" /></div><select><option>Сначала с высоким рейтингом</option><option>Сначала новые</option></select><button class="filter-button">Фильтры <span>2</span></button></div><div class="catalog-grid"><article class="task-card featured"><div class="task-card-top"><span class="status-pill ready">Готовая</span><span class="task-score">82 <small>/ 100</small></span></div><h3>Интерактивный урок по истории Казахстана</h3><p>Нужен современный формат урока для 8 класса с заданиями и мини-тестом.</p><div class="task-tags"><span>История</span><span>8 класс</span><span>Онлайн</span></div><div class="task-card-bottom"><span>2 предложения</span><button class="text-button">Открыть →</button></div></article><article class="task-card"><div class="task-card-top"><span class="status-pill working">Рабочая</span><span class="task-score">64 <small>/ 100</small></span></div><h3>Разговорная практика для начинающих</h3><p>Как помочь ученикам чаще говорить на казахском языке на занятии.</p><div class="task-tags"><span>Языки</span><span>A1–A2</span></div><div class="task-card-bottom"><span>5 предложений</span><button class="text-button">Открыть →</button></div></article><article class="task-card"><div class="task-card-top"><span class="status-pill draft">Черновик</span><span class="task-score">38 <small>/ 100</small></span></div><h3>Набор заданий для повторения</h3><p>Нужны короткие задания по ключевым темам перед контрольной работой.</p><div class="task-tags"><span>Методика</span><span>5–6 класс</span></div><div class="task-card-bottom"><span>Можно откликаться</span><button class="text-button">Открыть →</button></div></article></div></section>
+      </main>
+      <div id="toast" class="toast" role="status"></div>
+    </div>
+    <script src="app.js"></script>
+  </body>
+</html>
