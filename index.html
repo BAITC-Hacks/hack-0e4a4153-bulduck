@@ -34,8 +34,9 @@
               <div class="card-heading"><div><p class="section-kicker">Шаг <span id="stepNumber">01</span> / 03</p><h2 id="stepTitle">Опишите педагогическую задачу</h2></div><span class="ai-badge"><span class="sparkle">✦</span> AI-помощник</span></div>
               <div id="stepOne" class="step-content active-step">
                 <label class="field-label" for="draftInput">Что вы хотите изменить или создать?</label><p class="field-hint">Не стремитесь к идеальной формулировке — AI задаст уточняющие вопросы.</p>
-                <textarea id="draftInput" rows="6" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
+                <textarea id="draftInput" rows="6" maxlength="500" placeholder="Например: мне нужен интерактивный урок истории Казахстана для 8 класса..."></textarea>
                 <div class="textarea-footer"><span class="char-count"><span id="charCount">0</span> / 500</span><span>Можно писать как есть</span></div>
+                <div class="ai-help-row"><span>✦ AI поможет сделать описание яснее</span><button id="improveDraft" class="button secondary" type="button">Улучшить с AI</button></div>
                 <div class="example-prompt"><span class="example-icon">✦</span><span>Подсказка</span><button id="fillExample" class="text-button">Заполнить примером</button></div>
               </div>
               <div id="stepTwo" class="step-content">

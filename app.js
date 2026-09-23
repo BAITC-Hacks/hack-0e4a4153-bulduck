@@ -8,6 +8,7 @@ const stepLabel = document.querySelector('#stepLabel');
 const stepNumber = document.querySelector('#stepNumber');
 const stepTitle = document.querySelector('#stepTitle');
 const toast = document.querySelector('#toast');
+const improveButton = document.querySelector('#improveDraft');
 const example = 'Мне нужен интерактивный урок истории Казахстана для 8 класса, чтобы ученики лучше поняли тему «Алаш Орда» и не просто заучивали даты.';
 
 function showToast(message) { toast.textContent = message; toast.classList.add('show'); clearTimeout(showToast.timer); showToast.timer = setTimeout(() => toast.classList.remove('show'), 3000); }
@@ -49,6 +50,29 @@ async function generateCard() {
 	document.querySelector('#taskCriteria').value = `Понятная структура урока\nМинимум 3 практических задания\nУчтено ограничение: ${constraint}`;
 }
 draftInput.addEventListener('input', () => { charCount.textContent = draftInput.value.length; });
+improveButton.addEventListener('click', async () => {
+	const draft = draftInput.value.trim();
+	if (draft.length < 15) { showToast('Сначала опишите задачу — хотя бы несколько слов'); draftInput.focus(); return; }
+	if (draft.length > 500) { showToast('Сократите описание до 500 символов'); return; }
+	const originalLabel = improveButton.textContent;
+	improveButton.disabled = true;
+	improveButton.textContent = 'Улучшаю…';
+	try {
+		const resp = await fetch('/api/improve', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ draft }) });
+		if (!resp.ok) throw new Error('AI endpoint unavailable');
+		const result = await resp.json();
+		if (!result.improved) throw new Error('Empty response');
+		draftInput.value = result.improved;
+		charCount.textContent = result.improved.length;
+		showToast('Описание улучшено с помощью AI');
+	} catch (error) {
+		// Useful fallback for the static demo when the server is not running.
+		draftInput.value = `${draft.slice(0, 380).replace(/[.!?\s]+$/, '')}. Уточните учебную цель, аудиторию и ожидаемый результат.`;
+		charCount.textContent = draftInput.value.length;
+		showToast('Добавили подсказку к описанию');
+	}
+	finally { improveButton.disabled = false; improveButton.textContent = originalLabel; }
+});
 document.querySelector('#fillExample').addEventListener('click', () => { draftInput.value = example; charCount.textContent = example.length; draftInput.focus(); });
 nextButton.addEventListener('click', () => { if (state.step === 1 && draftInput.value.trim().length < 15) { showToast('Добавьте хотя бы несколько слов о задаче'); draftInput.focus(); return; } if (state.step < 3) { if (state.step === 2) generateCard(); state.step += 1; updateStep(); return; } showToast('Задача опубликована в каталоге'); setTimeout(() => setView('catalog'), 700); });
 backButton.addEventListener('click', () => { if (state.step > 1) { state.step -= 1; updateStep(); } });

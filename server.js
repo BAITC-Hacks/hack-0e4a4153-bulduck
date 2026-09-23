@@ -4,8 +4,43 @@ const cors = require('cors');
 const app = express();
 app.use(cors());
 app.use(express.json());
+app.use(express.static(__dirname));
 
 const OPENAI_KEY = process.env.OPENAI_API_KEY;
+
+app.post('/api/improve', async (req, res) => {
+  const draft = typeof req.body?.draft === 'string' ? req.body.draft.trim() : '';
+  if (draft.length < 15 || draft.length > 500) {
+    return res.status(400).json({ error: 'Описание должно содержать от 15 до 500 символов.' });
+  }
+  try {
+    if (!OPENAI_KEY) {
+      return res.json({ improved: `${draft.replace(/[.!?\s]+$/, '')}. Уточните учебную цель, целевую аудиторию и ожидаемый результат, сохранив исходную идею.` });
+    }
+
+    const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${OPENAI_KEY}` },
+      body: JSON.stringify({
+        model: 'gpt-4o-mini',
+        messages: [
+          { role: 'system', content: 'Ты помощник образовательной платформы. Улучши описание педагогической задачи на русском: сохрани исходный смысл, сделай формулировку яснее и конкретнее, не выдумывай факты. Верни только улучшенный текст, не более 500 символов.' },
+          { role: 'user', content: draft }
+        ],
+        max_tokens: 180,
+        temperature: 0.3,
+      }),
+    });
+    const data = await resp.json();
+    if (!resp.ok) return res.status(502).json({ error: 'AI service error' });
+    const improved = data?.choices?.[0]?.message?.content?.trim();
+    if (!improved) return res.status(502).json({ error: 'AI returned an empty response' });
+    return res.json({ improved: improved.slice(0, 500) });
+  } catch (err) {
+    console.error(err);
+    return res.status(500).json({ error: 'Improvement failed' });
+  }
+});
 
 app.post('/api/generate', async (req, res) => {
   const { draft, audience, subject, format, deadline, materials, constraint } = req.body || {};
