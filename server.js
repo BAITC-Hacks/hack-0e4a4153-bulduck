@@ -143,7 +143,7 @@ async function safeAI(route, body) {
   }
 }
 const taskApi = createTaskApi(safeAI);
-const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8' };
+const mime = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml' };
 const server = http.createServer(async (req, res) => {
   const pathname = new URL(req.url, 'http://localhost').pathname;
   if (req.method === 'GET' && pathname === '/api/health') {
@@ -178,7 +178,7 @@ const server = http.createServer(async (req, res) => {
   }
   if (req.method !== 'GET') { res.writeHead(405); return res.end(); }
   const file = pathname === '/' ? 'index.html' : pathname.slice(1);
-  if (!['index.html', 'app.js', 'tasks-ui.js', 'styles.css'].includes(file)) { res.writeHead(404); return res.end(); }
+  if (!['index.html', 'app.js', 'tasks-ui.js', 'ui-preferences.js', 'styles.css', 'favicon.svg'].includes(file)) { res.writeHead(404); return res.end(); }
   fs.readFile(path.join(__dirname, file), (error, data) => {
     if (error) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': mime[path.extname(file)] });

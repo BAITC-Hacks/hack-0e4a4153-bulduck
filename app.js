@@ -32,8 +32,10 @@ function updateStep() {
   $('#stepLabel').textContent = `Шаг ${state.step} из 3`;
   $('#stepNumber').textContent = String(state.step).padStart(2, '0');
   backButton.classList.toggle('hidden', state.step === 1);
-  nextButton.innerHTML = state.step === 3 ? 'Опубликовать задачу <span>↗</span>' : 'Продолжить <span>→</span>';
-  $('#stepTitle').textContent = ['','Опишите педагогическую задачу','Уточним детали','Проверьте карточку задачи'][state.step];
+  nextButton.disabled = Boolean(state.busy) || (state.step === 1 && !draftInput.value.trim());
+  nextButton.innerHTML = state.busy ? 'AI обрабатывает задачу… <span class="loading-sparkle">✦</span>' : state.step === 3 ? 'Опубликовать задачу <span>↗</span>' : state.step === 1 ? '<span class="button-ai-icon">✦</span> Продолжить с AI <span>→</span>' : 'Продолжить <span>→</span>';
+  $('#stepTitle').textContent = ['','Что вы хотите создать?','Уточним детали','Проверьте карточку задачи'][state.step];
+  $('#stepDescription').classList.toggle('hidden', state.step !== 1);
   document.querySelectorAll('.timeline-item').forEach((item, index) => item.classList.toggle('current', index + 1 === state.step));
 }
 async function request(route, method = 'GET', data) {
@@ -165,6 +167,7 @@ async function publish() {
     state.questionDraft = '';
     state.reviewSignature = '';
     draftInput.value = '';
+    document.dispatchEvent(new Event('edutask:published'));
     $('#charCount').textContent = '0';
     $('#confirmCard').checked = false;
     updateStep();
@@ -301,7 +304,7 @@ filterButton.addEventListener('click', () => {
   renderCatalog();
 });
 draftInput.addEventListener('input', () => { $('#charCount').textContent = draftInput.value.length; });
-$('#fillExample').addEventListener('click', () => { draftInput.value = example; $('#charCount').textContent = example.length; draftInput.focus(); });
+$('#fillExample').addEventListener('click', () => { draftInput.value = example; draftInput.dispatchEvent(new Event('input', { bubbles: true })); draftInput.focus(); });
 $('#improveDraft').addEventListener('click', async () => {
   const draft = draftInput.value.trim();
   if (draft.length < 15) { showToast('Сначала опишите задачу — хотя бы несколько слов'); draftInput.focus(); return; }
@@ -314,9 +317,11 @@ $('#improveDraft').addEventListener('click', async () => {
   } catch {
     draftInput.value = `${draft.slice(0, 420).replace(/[.!?\s]+$/, '')}. Уточните учебную цель и ожидаемый результат.`.slice(0, 500);
     showToast('Добавлена подсказка к описанию');
-  } finally { button.disabled = false; $('#charCount').textContent = draftInput.value.length; }
+  } finally { button.disabled = false; draftInput.dispatchEvent(new Event('input', { bubbles: true })); }
 });
 nextButton.addEventListener('click', async () => {
+  state.busy = true;
+  updateStep();
   nextButton.disabled = true;
   backButton.disabled = true;
   try {
@@ -333,7 +338,7 @@ nextButton.addEventListener('click', async () => {
       await reviewCard();
     } else { await publish(); }
   } catch (error) { showToast(error.message); updateStep(); }
-  finally { nextButton.disabled = false; backButton.disabled = false; }
+  finally { state.busy = false; updateStep(); backButton.disabled = false; }
 });
 backButton.addEventListener('click', () => { if (state.step > 1) { state.step--; updateStep(); } });
 document.querySelectorAll('[data-view]').forEach(button => button.addEventListener('click', () => setView(button.dataset.view)));

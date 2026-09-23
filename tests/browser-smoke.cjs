@@ -58,9 +58,29 @@ async function run() {
   const fill = (selector, value) => evaluate(`{const e=document.querySelector(${JSON.stringify(selector)});e.value=${JSON.stringify(value)};e.dispatchEvent(new Event('input',{bubbles:true}));e.dispatchEvent(new Event('change',{bubbles:true}));}`);
   await send('Page.navigate', { url: base }, sessionId);
   await wait("document.querySelector('#confirmCard') && document.querySelector('.catalog-grid .task-card')");
+  assert.equal(await evaluate("document.querySelector('#nextButton').disabled"), true);
+  assert.equal((await fetch(base + '/favicon.svg')).status, 200);
+  // Old or malformed local preferences must not prevent the merged app from loading.
+  await evaluate("localStorage.setItem('edutask-profile', '{'); localStorage.setItem('edutask-draft', 'Нужен урок с викториной для восьмого класса');");
+  await send('Page.reload', {}, sessionId);
+  await wait("document.querySelector('#draftInput')?.value === 'Нужен урок с викториной для восьмого класса' && document.querySelector('#confirmCard')");
+  await click('#themeToggle');
+  assert.equal(await evaluate("document.body.classList.contains('dark-theme')"), true);
+  await click('#profileToggle');
+  await fill('#profileFirstNameInput', 'Тест');
+  await fill('#profileLastNameInput', 'Команда');
+  await evaluate("document.querySelector('#profileForm').requestSubmit()");
+  await wait("document.querySelector('.profile-name').textContent === 'Тест Команда'");
+  await click('[data-example=quiz]');
+  assert.match(await evaluate("document.querySelector('#draftInput').value"), /викторину/);
+  await send('Page.reload', {}, sessionId);
+  await wait("document.querySelector('#confirmCard') && document.querySelector('.profile-name')?.textContent === 'Тест Команда'");
+  assert.equal(await evaluate("document.body.classList.contains('dark-theme')"), true);
+  assert.match(await evaluate("document.querySelector('#draftInput').value"), /викторину/);
   await click('#fillExample'); await click('#nextButton');
   await wait("document.querySelector('#stepTwo').classList.contains('active-step') && !document.querySelector('#nextButton').disabled");
   assert.equal(await evaluate("document.querySelectorAll('.question-fields textarea').length"), 3);
+  assert.equal(await evaluate("Array.from(document.querySelectorAll('.question-fields textarea')).every(x => x.value.length > 0)"), true);
   await click('#nextButton');
   await wait("document.querySelector('#stepThree').classList.contains('active-step') && !document.querySelector('#nextButton').disabled");
   await fill('#taskTitle', 'Браузерная проверка урока');
@@ -71,6 +91,7 @@ async function run() {
   await wait("document.querySelector('#stepThree').innerText.includes('Готовность: 100 / 100')");
   await click('#confirmCard'); await click('#nextButton');
   await wait("!document.querySelector('#catalogView').classList.contains('hidden') && document.querySelector('.catalog-grid').innerText.includes('Браузерная проверка урока')");
+  assert.equal(await evaluate("localStorage.getItem('edutask-draft')"), null);
   await fill('#demoRole', 'team');
   await evaluate("Array.from(document.querySelectorAll('.task-card')).find(x=>x.innerText.includes('Браузерная проверка урока')).querySelector('button').click()");
   await wait("document.querySelector('dialog[open] input[name=teamName]')");
@@ -89,7 +110,7 @@ async function run() {
   await send('Page.reload', {}, sessionId);
   await wait("document.querySelector('.catalog-grid')?.innerText.includes('Браузерная проверка урока')");
   assert.deepEqual(errors, []);
-  console.log('Browser smoke passed: create, score, publish, propose, accept, edit, reload.');
+  console.log('Browser smoke passed: merged theme, profile, draft recovery, AI suggestions, create, score, publish, propose, accept, edit, reload.');
 }
 run().catch(error => { console.error(error.message); process.exitCode = 1; }).finally(async () => {
   if (socket?.readyState === WebSocket.OPEN) {
